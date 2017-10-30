@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestNew(t *testing.T) {
+func TestNewByteArray(t *testing.T) {
 	assert := assert.New(t)
 	ba := NewByteArray()
 	assert.Equal(len(*ba), 0)
