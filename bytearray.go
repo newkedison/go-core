@@ -2,8 +2,6 @@ package core
 
 import (
 	"bytes"
-	"errors"
-	_ "fmt"
 	"github.com/newkedison/core/algorithm"
 	"strconv"
 )
@@ -109,20 +107,16 @@ func (ba ByteArray) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
-func (ba *ByteArray) UnmarshalBinary(data []byte) error {
-	buf := data
-	if len(buf) == 0 {
-		return errors.New("ByteArray.UnmarshalBinary: no data")
-	}
-	if len(buf) < 4 {
-		return errors.New("ByteArray.UnmarshalBinary: invalid length")
-	}
+func (ba *ByteArray) UnmarshalBinary(data []byte) (err error) {
+	defer SetErrorWhenNotEnoughDataErrorPanic(
+		"core.ByteArray.UnmashalBinary", &err)()
+	CheckBufferSize(data, 4)
 	var l uint32
 	offset := 0
 	offset += UnmashalSimpleType(&l, data)
-	if uint32(len(buf)) < 4+l {
-		return errors.New("ByteArray.UnmarshalBinary: invalid length")
-	}
+	CheckBufferSize(data, int(l), offset)
 	ba.AssignByCopy(data[offset : offset+int(l)])
 	return nil
 }
+
+// vim: fdm=syntax fdn=1

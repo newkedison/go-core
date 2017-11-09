@@ -105,10 +105,15 @@ func TestMarshalString(t *testing.T) {
 func TestUnmashalString(t *testing.T) {
 	assert := assert.New(t)
 	var s string
-	assert.Equal(UnmarshalString(&s, []byte{0x03, 0x00, 0x41, 0x41, 0x41}), 5)
+	assert.Panics(func() { UnmarshalString(&s, nil) })
+	assert.Panics(func() { UnmarshalString(&s, []byte{0x00}) })
+	assert.Panics(func() { UnmarshalString(&s, []byte{0x02, 0x00, 0x00}) })
+	n := UnmarshalString(&s, []byte{0x03, 0x00, 0x41, 0x41, 0x41})
+	assert.Equal(n, 5)
 	assert.Equal(s, "AAA")
-	assert.Equal(UnmarshalString(
-		&s, []byte{0x06, 0x00, 0xe4, 0xbd, 0xa0, 0xe5, 0xa5, 0xbd}), 8)
+	n = UnmarshalString(
+		&s, []byte{0x06, 0x00, 0xe4, 0xbd, 0xa0, 0xe5, 0xa5, 0xbd})
+	assert.Equal(n, 8)
 	assert.Equal(s, "你好")
 }
 
@@ -184,4 +189,29 @@ func TestSetByteOrder(t *testing.T) {
 	data, err := MarshalObject(mashalableObject(1))
 	assert.Equal(data, []byte{0xAA, 0xAA, 0xAA, 0x00, 0xAA, 0xAA, 0xAA, 0x00})
 	assert.Nil(err)
+}
+
+func TestSetErrorWhenNotEnoughDataErrorPanic(t *testing.T) {
+	assert := assert.New(t)
+	var err error = errors.New("hello")
+	defer func() {
+		r := recover()
+		assert.Nil(r)
+		assert.Error(err, "aaabbb")
+	}()
+	defer SetErrorWhenNotEnoughDataErrorPanic("aaa", &err)()
+	panic(NotEnoughDataError("bbb"))
+}
+
+func TestSetErrorWhenNotEnoughDataErrorPanic2(t *testing.T) {
+	assert := assert.New(t)
+	var err error = errors.New("hello")
+	defer func() {
+		r := recover()
+		assert.NotNil(r)
+		assert.IsType(r, 0)
+		assert.Error(err, "hello")
+	}()
+	defer SetErrorWhenNotEnoughDataErrorPanic("aaa", &err)()
+	panic(42)
 }

@@ -179,17 +179,17 @@ func TestUnmarshalBinary(t *testing.T) {
 	assert.Equal(len(buf), 6)
 	var ba2 ByteArray
 	if err := ba2.UnmarshalBinary(nil); assert.Error(err) {
-		assert.EqualError(err, "ByteArray.UnmarshalBinary: no data")
-	}
-	if err := ba2.UnmarshalBinary([]byte{}); assert.Error(err) {
-		assert.EqualError(err, "ByteArray.UnmarshalBinary: no data")
+		assert.EqualError(err,
+			"Unmashal core.ByteArray.UnmashalBinary fail: Not enought data, require 4, offer 0-0=0")
 	}
 	if err := ba2.UnmarshalBinary([]byte{0x00}); assert.Error(err) {
-		assert.EqualError(err, "ByteArray.UnmarshalBinary: invalid length")
+		assert.EqualError(err,
+			"Unmashal core.ByteArray.UnmashalBinary fail: Not enought data, require 4, offer 1-0=1")
 	}
 	if err := ba2.UnmarshalBinary(
 		[]byte{0x01, 0x00, 0x00, 0x00}); assert.Error(err) {
-		assert.EqualError(err, "ByteArray.UnmarshalBinary: invalid length")
+		assert.EqualError(err,
+			"Unmashal core.ByteArray.UnmashalBinary fail: Not enought data, require 1, offer 4-4=0")
 	}
 	err = ba2.UnmarshalBinary(buf)
 	assert.NoError(err)

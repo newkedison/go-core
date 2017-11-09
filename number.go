@@ -1,6 +1,9 @@
 package core
 
 import (
+	"bytes"
+	"errors"
+	"github.com/newkedison/core/algorithm"
 	"math"
 	"reflect"
 	"strconv"
@@ -101,4 +104,35 @@ func (v Number) ToFloat32() float32 {
 
 func (v Number) ToFloat64() float64 {
 	return float64(v)
+}
+
+var serializeVersion int32 = 0
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface.
+func (v Number) MarshalBinary() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	buf.Write(MarshalSimpleType(serializeVersion))
+	buf.Write(MarshalSimpleType(float64(v)))
+	return algorithm.AppendCrc16(buf.Bytes()), nil
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
+func (v *Number) UnmarshalBinary(data []byte) (err error) {
+	defer SetErrorWhenNotEnoughDataErrorPanic(
+		"core.Number.UnmarshalBinary", &err)()
+	CheckBufferSize(data, 4)
+	var ver int32
+	offset := 0
+	offset += UnmashalSimpleType(&ver, data)
+	switch ver {
+	case 0:
+		CheckBufferSize(data, 4+8+2)
+		if !algorithm.VerifyCrc16(data[:4+8+2]) {
+			return errors.New("core.Number.UnmarshalBinary: CRC check fail")
+		}
+		UnmashalSimpleType((*float64)(v), data[4:4+8])
+	default:
+		return errors.New("core.Number.UnmarshalBinary: version error")
+	}
+	return nil
 }
